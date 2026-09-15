@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/sebsebseb1982/duplicate-finder/compare/v1.0.0...v1.0.1) (2026-09-15)
+
+
+### Bug Fixes
+
+* **preview:** repair preview for network share ([47e7a34](https://github.com/sebsebseb1982/duplicate-finder/commit/47e7a345d44e15da1ba09b8d7413bc3623a5d327))
+
 # 1.0.0 (2026-09-15)
 
 
