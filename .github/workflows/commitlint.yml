@@ -1,0 +1,25 @@
+name: Commitlint
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+jobs:
+  # Valide que chaque commit de la PR suit les Conventional Commits (utile en
+  # cas de fusion "merge commit", où chaque commit atterrit tel quel sur master).
+  commits:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: wagoid/commitlint-github-action@v6
+
+  # Valide le titre de la PR (utile en cas de fusion "squash and merge", où
+  # seul ce titre devient le message du commit sur master).
+  pr-title:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
