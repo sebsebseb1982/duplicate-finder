@@ -297,3 +297,17 @@ fn deletion_list_roundtrip_and_safety() {
     assert!(!dup.exists() && changed.exists() && keep.exists() && protected.exists());
     fs::remove_dir_all(dir).unwrap();
 }
+
+#[cfg(windows)]
+#[test]
+fn preview_path_to_file_uri_windows() {
+    use crate::preview::path_to_file_uri;
+
+    assert_eq!(path_to_file_uri(Path::new(r"C:\path\to\image.jpg")), "file:///C:/path/to/image.jpg");
+    assert_eq!(path_to_file_uri(Path::new(r"\\?\C:\path\to\image.jpg")), "file:///C:/path/to/image.jpg");
+    assert_eq!(path_to_file_uri(Path::new(r"\\host\share\path\image.jpg")), "file://host/share/path/image.jpg");
+    assert_eq!(
+        path_to_file_uri(Path::new(r"\\?\UNC\host\share\path\image.jpg")),
+        "file://host/share/path/image.jpg"
+    );
+}

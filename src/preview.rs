@@ -29,7 +29,7 @@ impl Preview {
             .map(|e| e.to_string_lossy().to_lowercase())
             .unwrap_or_default();
         let kind = if IMAGE_EXT.contains(&ext.as_str()) {
-            PreviewKind::Image(format!("file://{}", path.display()))
+            PreviewKind::Image(path_to_file_uri(path))
         } else {
             match read_head(path, TEXT_LIMIT + 1) {
                 Ok(bytes) => classify(bytes),
@@ -70,6 +70,29 @@ impl Preview {
             }
         }
     }
+}
+
+/// Construit une URI `file://` valide pour `egui_extras::FileLoader` à partir
+/// d'un chemin natif. Sous Windows, `path.display()` produit des antislashs
+/// (et parfois le préfixe étendu `\\?\` ou `\\?\UNC\`) que le loader n'accepte
+/// pas tel quel : il lui faut `file:///C:/...` pour un disque local et
+/// `file://host/share/...` pour un partage réseau.
+#[cfg(windows)]
+pub(crate) fn path_to_file_uri(path: &Path) -> String {
+    let raw = path.to_string_lossy().replace('\\', "/");
+    let s = raw.strip_prefix("//?/").unwrap_or(&raw);
+    if let Some(rest) = s.strip_prefix("UNC/") {
+        format!("file://{rest}")
+    } else if let Some(rest) = s.strip_prefix("//") {
+        format!("file://{rest}")
+    } else {
+        format!("file:///{s}")
+    }
+}
+
+#[cfg(not(windows))]
+pub(crate) fn path_to_file_uri(path: &Path) -> String {
+    format!("file://{}", path.display())
 }
 
 fn read_head(path: &Path, limit: usize) -> std::io::Result<Vec<u8>> {
