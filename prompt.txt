@@ -1,0 +1,12 @@
+J'aimerais que tu me codes une application windows/linux (rust) pour dédoublonner les fichiers binairement identiques au sein d'un ou plusieurs dossiers.  
+
+Cette application construira progressivement une vue de résultats. Cette vue :
+ - contiendra un aperçu fichier concerné si son type est basique (txt, image, ...)
+ - contiendra une vue arborescente de doublons permettant de cocher des dossiers (ou sous dossiers) à ajouter à la liste de suppression. Ces dossiers pourraient prendre 3 couleurs :
+    - couleur par défaut (noir ou gris) : à traiter
+    - rouge à supprimer
+    - vert fichier restant quand tout ses doublons sont marqué supprimés
+ - se construira progressivement pendant la progression de la recherche pour pouvoir commencer à éliminer des doublons
+ - proposera un moteur des règle (glob pattern) qui permettra d'ajouter à la liste de suppression. ces règles pourront :
+    - être continuellement appliquée sur les doublons qui seront détectés ultérieurement lors du scan
+    - être appliquée unitairement à un moment et devront être appliquée ultérieurement si on le souhaite
