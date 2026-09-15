@@ -6,25 +6,45 @@ on:
 
 permissions:
   contents: write
-  pull-requests: write
 
 jobs:
-  # Maintient un PR de release à jour à partir des Conventional Commits, et,
-  # quand ce PR est fusionné, tague le dépôt (semver) et crée la Release GitHub.
-  release-please:
+  # À chaque push conventionnel sur master : calcule le prochain semver,
+  # met à jour Cargo.toml/Cargo.lock/CHANGELOG.md, commite, tague (vX.Y.Z)
+  # et crée directement la Release GitHub — sans étape d'approbation.
+  release:
     runs-on: ubuntu-latest
     outputs:
-      release_created: ${{ steps.release.outputs.release_created }}
-      tag_name: ${{ steps.release.outputs.tag_name }}
+      released: ${{ steps.semrel.outputs.new_release_published }}
+      tag: ${{ steps.semrel.outputs.new_release_git_tag }}
     steps:
-      - uses: googleapis/release-please-action@v4
-        id: release
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Release
+        id: semrel
+        uses: cycjimmy/semantic-release-action@v4
+        with:
+          extra_plugins: |
+            @semantic-release/changelog
+            @semantic-release/exec
+            @semantic-release/git
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # Ne tourne que lorsqu'une nouvelle Release vient d'être créée : compile et
   # publie les binaires Windows et Linux sur cette Release.
   build:
-    needs: release-please
-    if: ${{ needs.release-please.outputs.release_created == 'true' }}
+    needs: release
+    if: ${{ needs.release.outputs.released == 'true' }}
     strategy:
       fail-fast: false
       matrix:
@@ -41,7 +61,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ needs.release-please.outputs.tag_name }}
+          ref: ${{ needs.release.outputs.tag }}
 
       - uses: dtolnay/rust-toolchain@stable
         with:
@@ -61,5 +81,5 @@ jobs:
       - name: Upload to release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ needs.release-please.outputs.tag_name }}
+          tag_name: ${{ needs.release.outputs.tag }}
           files: dist/${{ matrix.asset }}
